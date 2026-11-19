@@ -11,11 +11,11 @@ const esc = (s: string) =>
 export type LabelsAcross = 1 | 2 | 3 | 4;
 
 // Text sizes in points for each layout, so labels stay readable as they shrink.
-const SIZES: Record<LabelsAcross, { code: number; name: number; location: number; qr: string }> = {
-  1: { code: 30, name: 28, location: 16, qr: '75mm' },
-  2: { code: 20, name: 16, location: 11, qr: '100%' },
-  3: { code: 15, name: 12, location: 9, qr: '100%' },
-  4: { code: 12, name: 10, location: 8, qr: '100%' },
+const SIZES: Record<LabelsAcross, { code: number; name: number; qr: string }> = {
+  1: { code: 30, name: 28, qr: '75mm' },
+  2: { code: 20, name: 16, qr: '100%' },
+  3: { code: 15, name: 12, qr: '100%' },
+  4: { code: 12, name: 10, qr: '100%' },
 };
 
 function labelsHtml(boxes: Box[], across: LabelsAcross): string {
@@ -26,7 +26,6 @@ function labelsHtml(boxes: Box[], across: LabelsAcross): string {
   ${qrSvg(boxLink(box.code))}
   <div class="code">${esc(formatCode(box.code))}</div>
   <div class="name">${esc(box.name)}</div>
-  ${box.location ? `<div class="location">${esc(box.location)}</div>` : ''}
 </div>`,
     )
     .join('\n');
@@ -41,7 +40,6 @@ function labelsHtml(boxes: Box[], across: LabelsAcross): string {
   .label svg { display: block; margin: 0 auto; width: ${size.qr}; height: auto; }
   .code { font-family: 'Courier New', monospace; font-weight: 700; font-size: ${size.code}pt; letter-spacing: 0.12em; }
   .name { font-weight: 700; font-size: ${size.name}pt; margin-top: 1mm; }
-  .location { font-size: ${size.location}pt; margin-top: 0.5mm; }
 </style></head><body>
 <div class="sheet">
 ${labels}
@@ -51,7 +49,8 @@ ${labels}
 
 /**
  * Prints QR labels for the given boxes, laid out in a grid to save paper.
- * Each label has the QR code, the typeable code, the box name and its location.
+ * Each label has the QR code, the typeable code and the box name. The location
+ * is left off on purpose: it changes when a box moves, and the label shouldn't.
  */
 export async function printLabels(boxes: Box[], across: LabelsAcross = 1): Promise<void> {
   if (!boxes.length) return;

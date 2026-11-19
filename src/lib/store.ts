@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
-import { pruneOrphanPhotos } from './photos';
+import { initPhotos, pruneOrphanPhotos } from './photos';
+import { newCode, parseBoxRef } from './qr';
 import type { Box } from './types';
 
 /**
@@ -38,6 +39,16 @@ export function loadBoxes(): Promise<void> {
         // Skip a corrupt record rather than failing the whole load.
       }
     }
+    // Boxes saved before codes existed get one now.
+    const taken = new Set(boxes.map((b) => b.code).filter(Boolean));
+    const upgraded = boxes.filter((b) => !b.code);
+    for (const box of upgraded) {
+      box.code = newCode(taken);
+      taken.add(box.code);
+    }
+    if (upgraded.length) await AsyncStorage.multiSet(upgraded.map((b) => [KEY_PREFIX + b.id, JSON.stringify(b)]));
+
+    await initPhotos();
     setState(boxes);
     pruneOrphanPhotos(referencedPhotos(boxes));
   })();
@@ -72,6 +83,19 @@ export async function deleteBox(id: string): Promise<void> {
 
 export function getBoxes(): Box[] {
   return state.boxes;
+}
+
+/** A code no existing box uses. */
+export function freshCode(): string {
+  return newCode(new Set(state.boxes.map((b) => b.code)));
+}
+
+/** Finds the box that scanned QR text or a typed code refers to. */
+export function findBox(text: string): Box | undefined {
+  const { code, id } = parseBoxRef(text);
+  if (code) return state.boxes.find((b) => b.code === code);
+  if (id) return state.boxes.find((b) => b.id === id);
+  return undefined;
 }
 
 function subscribe(listener: () => void) {

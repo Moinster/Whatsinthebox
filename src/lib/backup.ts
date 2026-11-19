@@ -1,9 +1,11 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import { readPhotoBase64, writePhotoBase64 } from './photos';
+import { newCode } from './qr';
 import { getBoxes, referencedPhotos, saveBoxes } from './store';
 import type { Box } from './types';
 
@@ -15,6 +17,14 @@ type BackupFile = {
   /** Photo files keyed by their stored filename, base64 encoded. */
   photos: Record<string, string>;
 };
+
+const LAST_BACKUP_KEY = 'witb:lastBackupAt';
+
+/** When the last backup file was created on this device, if ever. */
+export async function getLastBackupAt(): Promise<number | undefined> {
+  const value = await AsyncStorage.getItem(LAST_BACKUP_KEY);
+  return value ? Number(value) : undefined;
+}
 
 /** Writes every box and photo into one JSON file and opens the share sheet. */
 export async function exportBackup(): Promise<number> {
@@ -48,6 +58,7 @@ export async function exportBackup(): Promise<number> {
     await file.write(json);
     await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Save backup' });
   }
+  await AsyncStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
   return boxes.length;
 }
 
@@ -79,23 +90,19 @@ export async function importBackup(): Promise<number | undefined> {
     throw new Error("That file isn't a What's in the Box backup.");
   }
 
-  const photos = backup.photos ?? {};
-  // The web has no photo folder, so photos are kept inline there.
-  const resolve = (ref: string | undefined) =>
-    ref && Platform.OS === 'web' && photos[ref] ? `data:image/jpeg;base64,${photos[ref]}` : ref;
+  for (const [ref, data] of Object.entries(backup.photos ?? {})) await writePhotoBase64(ref, data);
 
-  if (Platform.OS !== 'web') {
-    for (const [ref, data] of Object.entries(photos)) await writePhotoBase64(ref, data);
-  }
-
+  // Keep each box's printed code. Only a box with no code, or whose code now
+  // belongs to a different box on this device, is given a new one.
+  const owner = new Map(getBoxes().map((b) => [b.code, b.id]));
   const boxes: Box[] = backup.boxes
     .filter((b) => b && typeof b.id === 'string' && typeof b.name === 'string')
-    .map((b) => ({
-      ...b,
-      location: b.location ?? '',
-      photo: resolve(b.photo),
-      items: (Array.isArray(b.items) ? b.items : []).map((i) => ({ ...i, photo: resolve(i.photo) })),
-    }));
+    .map((b) => {
+      const clash = !b.code || (owner.has(b.code) && owner.get(b.code) !== b.id);
+      const code = clash ? newCode(new Set(owner.keys())) : b.code;
+      owner.set(code, b.id);
+      return { ...b, code, location: b.location ?? '', items: Array.isArray(b.items) ? b.items : [] };
+    });
   await saveBoxes(boxes);
   return boxes.length;
 }

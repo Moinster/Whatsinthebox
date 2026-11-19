@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { Button, Card, Field, Photo } from '../components/ui';
 import { confirm, errorMessage, notify } from '../lib/dialog';
 import { pickPhoto } from '../lib/photos';
-import { saveBox, useBox } from '../lib/store';
+import { freshCode, saveBox, useBox } from '../lib/store';
 import { colors } from '../lib/theme';
 import { newId } from '../lib/types';
 import type { Box, Item } from '../lib/types';
@@ -84,6 +84,7 @@ export default function EditBox() {
     const now = Date.now();
     const box: Box = {
       id: existing?.id ?? newId(),
+      code: existing?.code ?? freshCode(),
       name: trimmedName,
       location: location.trim(),
       photo,

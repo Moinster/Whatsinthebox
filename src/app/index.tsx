@@ -1,15 +1,41 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui';
-import { useBoxes } from '../lib/store';
+import { getLastBackupAt } from '../lib/backup';
+import { notify } from '../lib/dialog';
+import { findBox, useBoxes } from '../lib/store';
 import { colors } from '../lib/theme';
 
 export default function Home() {
   const { loaded, boxes } = useBoxes();
   const itemCount = boxes.reduce((n, b) => n + b.items.length, 0);
+
+  // A scanned QR link opens the app here as "/?box=CODE".
+  const { box: linkedCode } = useLocalSearchParams<{ box?: string }>();
+  useEffect(() => {
+    if (!loaded || !linkedCode) return;
+    const box = findBox(linkedCode);
+    router.setParams({ box: undefined });
+    if (box) router.push(`/box/${box.id}`);
+    else notify('Box not found', "That box isn't on this device. It may have been deleted, or it was created on another phone.");
+  }, [loaded, linkedCode]);
+
+  const [lastBackup, setLastBackup] = useState<number | undefined>();
+  useEffect(() => {
+    getLastBackupAt().then(setLastBackup, () => {});
+  }, [boxes]);
+  const backupNote =
+    boxes.length === 0
+      ? undefined
+      : lastBackup === undefined
+        ? 'never backed up'
+        : boxes.some((b) => b.updatedAt > lastBackup)
+          ? 'changes not backed up'
+          : 'backed up';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -37,7 +63,7 @@ export default function Home() {
           style={styles.big}
         />
         <Button
-          label="Scan a box QR code"
+          label="Scan or enter a box code"
           icon="qr-code-outline"
           variant="secondary"
           onPress={() => router.push('/scan')}
@@ -47,7 +73,7 @@ export default function Home() {
 
       <Pressable accessibilityRole="button" onPress={() => router.push('/backup')} style={styles.link}>
         <Ionicons name="cloud-upload-outline" size={18} color={colors.muted} />
-        <Text style={styles.linkText}>Backup & restore</Text>
+        <Text style={styles.linkText}>Backup & restore{backupNote ? ` · ${backupNote}` : ''}</Text>
       </Pressable>
     </SafeAreaView>
   );

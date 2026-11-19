@@ -1,7 +1,7 @@
 import * as Print from 'expo-print';
 import { Platform } from 'react-native';
 
-import { boxLink, qrSvg } from './qr';
+import { boxLink, formatCode, qrSvg } from './qr';
 import type { Box } from './types';
 
 const esc = (s: string) =>
@@ -13,15 +13,17 @@ function labelHtml(box: Box): string {
   @page { margin: 12mm; }
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; text-align: center; color: #000; }
   .label { display: inline-block; border: 2px solid #000; border-radius: 12px; padding: 20px 28px; }
+  .code { font-family: 'Courier New', monospace; font-size: 30px; font-weight: 700; letter-spacing: 4px; }
   h1 { font-size: 28px; margin: 12px 0 4px; }
   p { font-size: 16px; margin: 0; }
   small { display: block; margin-top: 10px; font-size: 11px; color: #555; }
 </style></head><body>
 <div class="label">
-  ${qrSvg(boxLink(box.id), 280)}
+  ${qrSvg(boxLink(box.code), 280)}
+  <div class="code">${esc(formatCode(box.code))}</div>
   <h1>${esc(box.name)}</h1>
   ${box.location ? `<p>${esc(box.location)}</p>` : ''}
-  <small>Scan with What's in the Box</small>
+  <small>Scan the code, or type the letters above into What's in the Box</small>
 </div>
 </body></html>`;
 }

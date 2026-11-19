@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, EmptyState, Photo, QRCode } from '../../components/ui';
 import { confirm, errorMessage, notify } from '../../lib/dialog';
 import { printBoxLabel } from '../../lib/print';
-import { boxLink } from '../../lib/qr';
+import { boxLink, formatCode } from '../../lib/qr';
 import { deleteBox, useBox } from '../../lib/store';
 import { colors } from '../../lib/theme';
 
@@ -85,8 +85,13 @@ export default function BoxScreen() {
 
       <Text style={styles.section}>QR code</Text>
       <Card style={styles.qrCard}>
-        <QRCode value={boxLink(box.id)} size={200} />
-        <Text style={styles.qrHint}>Print this label and stick it on the box. Scan it later to see what's inside.</Text>
+        <QRCode value={boxLink(box.code)} size={200} />
+        <Text style={styles.code} selectable accessibilityLabel={`Box code ${formatCode(box.code)}`}>
+          {formatCode(box.code)}
+        </Text>
+        <Text style={styles.qrHint}>
+          Print this label and stick it on the box. Scan it later, or type the code into the app, to see what's inside.
+        </Text>
         <Button label="Print label" icon="print-outline" onPress={print} style={{ alignSelf: 'stretch' }} />
       </Card>
 
@@ -109,5 +114,6 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 16, fontWeight: '600', color: colors.text },
   itemDescription: { fontSize: 14, color: colors.muted, lineHeight: 19 },
   qrCard: { alignItems: 'center', gap: 12 },
+  code: { fontSize: 28, fontWeight: '800', letterSpacing: 4, color: colors.text, fontVariant: ['tabular-nums'] },
   qrHint: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 19 },
 });

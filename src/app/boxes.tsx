@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button, EmptyState, Photo } from '../components/ui';
+import { formatCode } from '../lib/qr';
 import { useBoxes } from '../lib/store';
 import { colors, radius } from '../lib/theme';
 import type { Box } from '../lib/types';
 
 type Result = { box: Box; matchedItems: string[] };
 
-/** Every word in the query must appear in the box name, location, or one of its items. */
+/** Every word in the query must appear in the box name, location, code, or one of its items. */
 function search(boxes: Box[], query: string): Result[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return boxes.map((box) => ({ box, matchedItems: [] }));
@@ -18,7 +19,7 @@ function search(boxes: Box[], query: string): Result[] {
   const results: Result[] = [];
   for (const box of boxes) {
     const itemTexts = box.items.map((i) => `${i.name} ${i.description ?? ''}`.toLowerCase());
-    const haystack = [box.name, box.location, ...itemTexts].join(' ').toLowerCase();
+    const haystack = [box.name, box.location, box.code, formatCode(box.code), ...itemTexts].join(' ').toLowerCase();
     if (!words.every((w) => haystack.includes(w))) continue;
     const matchedItems = box.items
       .filter((_, idx) => words.some((w) => itemTexts[idx].includes(w)))
@@ -51,7 +52,7 @@ export default function Boxes() {
           accessibilityLabel="Search boxes"
           value={query}
           onChangeText={setQuery}
-          placeholder="Search boxes, items, or locations"
+          placeholder="Search boxes, items, locations, codes"
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           autoCorrect={false}

@@ -1,16 +1,58 @@
 import qrcode from 'qrcode-generator';
+import { Platform } from 'react-native';
 
-const SCHEME = 'whatsinthebox://box/';
+/** Where the web app is hosted. Native builds put this address in their QR codes. */
+const HOSTED_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://moinster.github.io/Whatsinthebox';
 
-/** The text encoded in a box's QR code. It is also a deep link into the app. */
-export function boxLink(boxId: string): string {
-  return SCHEME + boxId;
+// No 0/O or 1/I, so a code read off a label can't be mistyped that way.
+const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CODE_LENGTH = 6;
+
+export function newCode(taken: Set<string>): string {
+  for (;;) {
+    let code = '';
+    for (let i = 0; i < CODE_LENGTH; i++) code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    if (!taken.has(code)) return code;
+  }
 }
 
-/** Returns the box id from scanned QR text, or undefined if it isn't one of ours. */
-export function parseBoxLink(text: string): string | undefined {
-  const match = /^whatsinthebox:\/\/box\/([A-Za-z0-9_-]+)/.exec(text.trim());
-  return match?.[1];
+/** "K7M4QP" → "K7M-4QP", the way it is printed on the label. */
+export function formatCode(code: string): string {
+  return code.length === CODE_LENGTH ? `${code.slice(0, 3)}-${code.slice(3)}` : code;
+}
+
+/** Cleans up typed input: any case, with or without the dash or spaces. */
+export function normalizeCode(text: string): string {
+  return text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function appUrl(): string {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return window.location.origin + (process.env.EXPO_BASE_URL ?? '');
+  }
+  return HOSTED_URL;
+}
+
+/** The link encoded in a box's QR code. Any phone camera can open it. */
+export function boxLink(code: string): string {
+  return `${appUrl().replace(/\/$/, '')}/?box=${code}`;
+}
+
+/**
+ * Works out which box some scanned or typed text refers to. Accepts a QR link
+ * from any address the app has been hosted at, an older app-only link, or the
+ * bare code from the label.
+ */
+export function parseBoxRef(text: string): { code?: string; id?: string } {
+  const trimmed = text.trim();
+  const legacy = /^whatsinthebox:\/\/box\/([A-Za-z0-9_-]+)/.exec(trimmed);
+  if (legacy) return { id: legacy[1] };
+  const link = /[?&]box=([A-Za-z0-9-]+)/.exec(trimmed);
+  if (link) return { code: normalizeCode(link[1]) };
+  if (/^[A-Za-z0-9][A-Za-z0-9 -]*$/.test(trimmed) && normalizeCode(trimmed).length === CODE_LENGTH) {
+    return { code: normalizeCode(trimmed) };
+  }
+  return {};
 }
 
 /** Renders text as a standalone QR code SVG document. */

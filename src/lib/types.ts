@@ -8,6 +8,8 @@ export type Item = {
 
 export type Box = {
   id: string;
+  /** Short code printed under the QR code, e.g. "K7M4QP". Typed in when scanning isn't possible. */
+  code: string;
   name: string;
   location: string;
   /** Photo of the inside of the box — see lib/photos.ts */

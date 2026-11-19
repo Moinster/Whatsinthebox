@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, Field, Photo } from '../components/ui';
@@ -45,27 +45,19 @@ function IconButton(props: { icon: React.ComponentProps<typeof Ionicons>['name']
 
 export default function EditBox() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { loaded, box: existing } = useBox(id);
+  const { loaded, box } = useBox(id);
 
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [photo, setPhoto] = useState<string | undefined>();
-  const [items, setItems] = useState<Item[]>([]);
-  const [saving, setSaving] = useState(false);
-
-  // Fill the form once the box being edited is available.
-  const [filledFor, setFilledFor] = useState<string | undefined>();
-  useEffect(() => {
-    if (existing && filledFor !== existing.id) {
-      setName(existing.name);
-      setLocation(existing.location);
-      setPhoto(existing.photo);
-      setItems(existing.items);
-      setFilledFor(existing.id);
-    }
-  }, [existing, filledFor]);
-
+  // Wait for the box being edited, so the form can start from its values.
   if (id && !loaded) return null;
+  return <BoxForm key={box?.id ?? 'new'} existing={box} />;
+}
+
+function BoxForm({ existing }: { existing: Box | undefined }) {
+  const [name, setName] = useState(existing?.name ?? '');
+  const [location, setLocation] = useState(existing?.location ?? '');
+  const [photo, setPhoto] = useState(existing?.photo);
+  const [items, setItems] = useState<Item[]>(existing?.items ?? []);
+  const [saving, setSaving] = useState(false);
 
   const updateItem = (itemId: string, patch: Partial<Item>) =>
     setItems((list) => list.map((i) => (i.id === itemId ? { ...i, ...patch } : i)));
@@ -110,7 +102,7 @@ export default function EditBox() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <Stack.Screen options={{ title: existing ? 'Edit box' : 'New box' }} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Field label="Box name" value={name} onChangeText={setName} placeholder="e.g. Holiday decorations" autoFocus={!id} />
+        <Field label="Box name" value={name} onChangeText={setName} placeholder="e.g. Holiday decorations" autoFocus={!existing} />
         <Field label="Location" value={location} onChangeText={setLocation} placeholder="e.g. Garage, top shelf" />
 
         <View style={{ gap: 8 }}>

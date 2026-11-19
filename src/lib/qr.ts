@@ -1,4 +1,4 @@
-import qrcode from 'qrcode-generator';
+import qrGenerator from 'qrcode-generator';
 import { Platform } from 'react-native';
 
 /** Where the web app is hosted. Native builds put this address in their QR codes. */
@@ -57,7 +57,7 @@ export function parseBoxRef(text: string): { code?: string; id?: string } {
 
 /** Renders text as a standalone QR code SVG document. */
 export function qrSvg(text: string, size = 240): string {
-  const qr = qrcode(0, 'M');
+  const qr = qrGenerator(0, 'M');
   qr.addData(text);
   qr.make();
   const count = qr.getModuleCount();

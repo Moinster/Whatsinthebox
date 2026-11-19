@@ -55,7 +55,7 @@ export default function Scan() {
       </View>
 
       <View style={styles.manual}>
-        <Text style={styles.manualLabel}>Can't scan? Type the code printed under the QR code</Text>
+        <Text style={styles.manualLabel}>{"Can't scan? Type the code printed under the QR code"}</Text>
         <View style={styles.manualRow}>
           <TextInput
             accessibilityLabel="Box code"

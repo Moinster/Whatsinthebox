@@ -43,7 +43,7 @@ export default function Home() {
         <View style={styles.logo}>
           <Ionicons name="cube" size={56} color={colors.primary} />
         </View>
-        <Text style={styles.title}>What's in the Box</Text>
+        <Text style={styles.title}>{"What's in the Box"}</Text>
         <Text style={styles.subtitle}>
           {!loaded
             ? ' '

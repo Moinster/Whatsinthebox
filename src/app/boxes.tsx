@@ -39,9 +39,16 @@ export default function Boxes() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable accessibilityRole="button" accessibilityLabel="Add a box" hitSlop={10} onPress={() => router.push('/edit')}>
-              <Ionicons name="add-circle" size={30} color={colors.primary} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              {boxes.length > 0 && (
+                <Pressable accessibilityRole="button" accessibilityLabel="Print labels" hitSlop={10} onPress={() => router.push('/print')}>
+                  <Ionicons name="print-outline" size={26} color={colors.primary} />
+                </Pressable>
+              )}
+              <Pressable accessibilityRole="button" accessibilityLabel="Add a box" hitSlop={10} onPress={() => router.push('/edit')}>
+                <Ionicons name="add-circle" size={30} color={colors.primary} />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -119,6 +126,7 @@ export default function Boxes() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, maxWidth: 560, width: '100%', alignSelf: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingRight: 4 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -7,7 +7,8 @@ aimed at Android first, from the same codebase that can also build native iOS an
 - List the items in it. Each item has a name, plus an optional description and photo.
 - Saving a box generates a QR code and a short code such as `K7M-4QP`. Print the label, stick it on the box, and
   later scan it or type the code to see the contents.
-- Search across box names, locations, and items.
+- Search across box names, locations, items, and codes.
+- Print one label, or pick several (or all) and print them on shared sheets in three sizes to save paper.
 - Everything is editable. "Empty box" clears the items but keeps the box and its QR code, so a labelled box can be reused.
 - Data lives on the device. Backup & restore writes all boxes and photos to a single file.
 

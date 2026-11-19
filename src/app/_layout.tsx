@@ -27,6 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="boxes" options={{ title: 'My boxes' }} />
         <Stack.Screen name="box/[id]" options={{ title: 'Box' }} />
         <Stack.Screen name="edit" options={{ title: 'New box' }} />
+        <Stack.Screen name="print" options={{ title: 'Print labels' }} />
         <Stack.Screen name="scan" options={{ title: 'Scan a box' }} />
         <Stack.Screen name="backup" options={{ title: 'Backup & restore' }} />
       </Stack>

@@ -24,7 +24,9 @@ export function Scanner({ onScan, paused }: ScannerProps) {
 
   // Keep the latest props reachable from the scan loop without restarting the camera.
   const latest = useRef({ onScan, paused });
-  latest.current = { onScan, paused };
+  useEffect(() => {
+    latest.current = { onScan, paused };
+  }, [onScan, paused]);
 
   useEffect(() => {
     let stopped = false;

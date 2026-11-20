@@ -43,5 +43,6 @@
     "build:web": "node scripts/build-web.mjs",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "license": "MIT"
 }

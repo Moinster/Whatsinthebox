@@ -110,3 +110,7 @@ installed app; set `EXPO_PUBLIC_WEB_URL` at build time to make it print web link
 
 Inside either app, the scanner and the code box accept both kinds of label, and the short code printed under the QR
 (for example `K7M-4QP`) always works.
+
+## License
+
+[MIT](LICENSE). Free to use, change, and share.

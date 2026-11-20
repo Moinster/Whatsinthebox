@@ -1,8 +1,12 @@
 import qrGenerator from 'qrcode-generator';
 import { Platform } from 'react-native';
 
-/** Where the web app is hosted. Native builds put this address in their QR codes. */
-const HOSTED_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://moinster.github.io/Whatsinthebox';
+/**
+ * Address put in QR codes made by the native app. By default that is the app's
+ * own link scheme, so a phone's camera opens the installed app. Set
+ * EXPO_PUBLIC_WEB_URL to a hosted copy of the web app to use web links instead.
+ */
+const NATIVE_LINK_BASE = process.env.EXPO_PUBLIC_WEB_URL ?? 'whatsinthebox://';
 
 // No 0/O or 1/I, so a code read off a label can't be mistyped that way.
 const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -26,16 +30,13 @@ export function normalizeCode(text: string): string {
   return text.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function appUrl(): string {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    return window.location.origin + (process.env.EXPO_BASE_URL ?? '');
-  }
-  return HOSTED_URL;
-}
-
-/** The link encoded in a box's QR code. Any phone camera can open it. */
+/** The link encoded in a box's QR code. A phone camera can open it. */
 export function boxLink(code: string): string {
-  return `${appUrl().replace(/\/$/, '')}/?box=${code}`;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    // The web app links to wherever it is being served from.
+    return `${window.location.origin}${process.env.EXPO_BASE_URL ?? ''}/?box=${code}`;
+  }
+  return `${NATIVE_LINK_BASE.replace(/\/$/, '')}/?box=${code}`;
 }
 
 /**
